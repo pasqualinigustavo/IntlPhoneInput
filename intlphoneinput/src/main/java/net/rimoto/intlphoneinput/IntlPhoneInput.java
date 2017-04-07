@@ -161,6 +161,8 @@ public class IntlPhoneInput extends RelativeLayout {
             iso = DEFAULT_COUNTRY;
         }
         int defaultIdx = mCountries.indexOfIso(iso);
+        if(defaultIdx < 0)
+            defaultIdx = 0;
         mSelectedCountry = mCountries.get(defaultIdx);
         mCountrySpinner.setSelection(defaultIdx);
     }

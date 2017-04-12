@@ -12,30 +12,32 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="net.rimoto.intlphoneinput.demo.MainActivity">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="36dp"
-        android:text="Custom" />
+    <!--<TextView-->
+    <!--android:layout_width="wrap_content"-->
+    <!--android:layout_height="wrap_content"-->
+    <!--android:layout_marginTop="36dp"-->
+    <!--android:text="Custom" />-->
 
     <net.rimoto.intlphoneinput.IntlPhoneInput
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        app:hint="@string/item_preview_hint"
         app:flagPaddingBottom="4dp"
         app:flagPaddingEnd="4dp"
         app:flagPaddingStart="4dp"
         app:flagPaddingTop="4dp"
         app:textColor="@color/colorAccent"
+        app:textColorHint="@color/colorAccent"
         app:textSize="16sp" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="36dp"
-        android:text="Default values" />
+    <!--<TextView-->
+    <!--android:layout_width="wrap_content"-->
+    <!--android:layout_height="wrap_content"-->
+    <!--android:layout_marginTop="36dp"-->
+    <!--android:text="Default values" />-->
 
-    <net.rimoto.intlphoneinput.IntlPhoneInput
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+    <!--<net.rimoto.intlphoneinput.IntlPhoneInput-->
+    <!--android:layout_width="match_parent"-->
+    <!--android:layout_height="wrap_content" />-->
 
 </LinearLayout>

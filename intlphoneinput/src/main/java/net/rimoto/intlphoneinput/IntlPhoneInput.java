@@ -3,9 +3,13 @@ package net.rimoto.intlphoneinput;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.os.Build;
+import android.support.design.widget.TextInputEditText;
 import android.telephony.PhoneNumberFormattingTextWatcher;
 import android.telephony.TelephonyManager;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.KeyEvent;
@@ -13,8 +17,7 @@ import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
-import android.widget.EditText;
-import android.widget.RelativeLayout;
+import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -24,12 +27,14 @@ import com.google.i18n.phonenumbers.Phonenumber;
 
 import java.util.Locale;
 
-public class IntlPhoneInput extends RelativeLayout {
+public class IntlPhoneInput extends LinearLayout {
     private final String DEFAULT_COUNTRY = Locale.getDefault().getCountry();
 
     // UI Views
+    private TextView intl_phone_edit__hint;
     private Spinner mCountrySpinner;
-    private EditText mPhoneEdit;
+    private TextInputEditText mPhoneEdit;
+    private CustomTextInputLayout phoneEditLayout;
 
     //Adapters
     private CountrySpinnerAdapter mCountrySpinnerAdapter;
@@ -84,10 +89,18 @@ public class IntlPhoneInput extends RelativeLayout {
         setFlagDefaults(attrs);
 
         /**
+         * TextView Hint
+         */
+        intl_phone_edit__hint = (TextView) findViewById(R.id.intl_phone_edit__hint);
+
+        /**
          * Phone text field
          */
-        mPhoneEdit = (EditText) findViewById(R.id.intl_phone_edit__phone);
+        mPhoneEdit = (TextInputEditText) findViewById(R.id.intl_phone_edit__phone);
         mPhoneEdit.addTextChangedListener(mPhoneNumberWatcher);
+        mPhoneEdit.getBackground().mutate().setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_ATOP);
+
+        phoneEditLayout = (CustomTextInputLayout) findViewById(R.id.intl_phone_layout_edit__phone);
 
         setDefault();
         setEditTextDefaults(attrs);
@@ -120,7 +133,14 @@ public class IntlPhoneInput extends RelativeLayout {
         int hintColor = a.getColor(R.styleable.IntlPhoneInput_textColorHint, -1);
         if (hintColor != -1) {
             mPhoneEdit.setHintTextColor(color);
+            intl_phone_edit__hint.setTextColor(color);
         }
+        //textsize of hint
+        int textSizeHint = a.getDimensionPixelSize(R.styleable.IntlPhoneInput_textSize, getResources().getDimensionPixelSize(R.dimen.text_size_default));
+        intl_phone_edit__hint.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSizeHint);
+
+        String hint = a.getString(R.styleable.IntlPhoneInput_hint);
+        setHint(hint);
         a.recycle();
     }
 
@@ -130,6 +150,35 @@ public class IntlPhoneInput extends RelativeLayout {
     public void hideKeyboard() {
         InputMethodManager inputMethodManager = (InputMethodManager) getContext().getApplicationContext().getSystemService(Context.INPUT_METHOD_SERVICE);
         inputMethodManager.hideSoftInputFromWindow(mPhoneEdit.getWindowToken(), 0);
+    }
+
+    /**
+     * Show keyboard from phoneEdit field
+     */
+    public void showKeyboard() {
+        InputMethodManager inputMethodManager = (InputMethodManager) getContext().getApplicationContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+        inputMethodManager.showSoftInput(mPhoneEdit, 0);
+    }
+
+    /**
+     * Get EditText for keyboard reasons and stuff
+     */
+    public TextInputEditText getPhoneNumberEditText() {
+        return mPhoneEdit;
+    }
+
+    /**
+     * Get TextView for hint
+     */
+    public TextView getIntlTextViewHint() {
+        return intl_phone_edit__hint;
+    }
+
+    /**
+     * Get Customlayout for keyboard reasons and stuff
+     */
+    public CustomTextInputLayout getPhoneEditLayout() {
+        return phoneEditLayout;
     }
 
     /**
@@ -161,7 +210,7 @@ public class IntlPhoneInput extends RelativeLayout {
             iso = DEFAULT_COUNTRY;
         }
         int defaultIdx = mCountries.indexOfIso(iso);
-        if(defaultIdx < 0)
+        if (defaultIdx < 0)
             defaultIdx = 0;
         mSelectedCountry = mCountries.get(defaultIdx);
         mCountrySpinner.setSelection(defaultIdx);
@@ -178,10 +227,34 @@ public class IntlPhoneInput extends RelativeLayout {
      * Set hint number for country
      */
     private void setHint() {
-        if (mPhoneEdit != null && mSelectedCountry != null && mSelectedCountry.getIso() != null) {
+        if (phoneEditLayout != null && mSelectedCountry != null && mSelectedCountry.getIso() != null) {
             Phonenumber.PhoneNumber phoneNumber = mPhoneUtil.getExampleNumberForType(mSelectedCountry.getIso(), PhoneNumberUtil.PhoneNumberType.MOBILE);
             if (phoneNumber != null) {
                 mPhoneEdit.setHint(mPhoneUtil.format(phoneNumber, PhoneNumberUtil.PhoneNumberFormat.NATIONAL));
+            }
+        }
+    }
+
+    public void setHint(String hint) {
+//        if (!TextUtils.isEmpty(hint) && phoneEditLayout != null) {
+//            phoneEditLayout.setHint(hint);
+//            if (!phoneEditLayout.isErrorEnabled()) {
+//                phoneEditLayout.setHelperTextEnabled(true);
+//            }
+//        }
+        if (!TextUtils.isEmpty(hint) && intl_phone_edit__hint != null)
+            intl_phone_edit__hint.setText(hint);
+    }
+
+    public void setError(String error) {
+        if (phoneEditLayout != null) {
+            if (!TextUtils.isEmpty(error)) {
+                phoneEditLayout.setError(error);
+                phoneEditLayout.setHelperTextEnabled(false);
+                phoneEditLayout.setErrorEnabled(true);
+            } else {
+                phoneEditLayout.setHelperTextEnabled(true);
+                phoneEditLayout.setErrorEnabled(false);
             }
         }
     }
@@ -259,12 +332,12 @@ public class IntlPhoneInput extends RelativeLayout {
                 iso = mSelectedCountry.getIso();
             }
             Phonenumber.PhoneNumber phoneNumber = mPhoneUtil.parse(number, iso);
-			
+
             int countryIdx = mCountries.indexOfIso(mPhoneUtil.getRegionCodeForNumber(phoneNumber));
-			mSelectedCountry = mCountries.get(countryIdx);		
+            mSelectedCountry = mCountries.get(countryIdx);
             mCountrySpinner.setSelection(countryIdx);
-			
-			
+
+
             mPhoneEdit.setText(mPhoneUtil.format(phoneNumber, PhoneNumberUtil.PhoneNumberFormat.NATIONAL));
         } catch (NumberParseException ignored) {
         }

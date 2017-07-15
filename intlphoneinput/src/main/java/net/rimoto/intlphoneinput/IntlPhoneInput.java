@@ -2,6 +2,7 @@ package net.rimoto.intlphoneinput;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
@@ -28,7 +29,7 @@ import com.google.i18n.phonenumbers.Phonenumber;
 import java.util.Locale;
 
 public class IntlPhoneInput extends LinearLayout {
-    private final String DEFAULT_COUNTRY = Locale.getDefault().getCountry();
+    private String DEFAULT_COUNTRY = Locale.getDefault().getCountry();
 
     // UI Views
     private TextView intl_phone_edit__hint;
@@ -38,7 +39,7 @@ public class IntlPhoneInput extends LinearLayout {
 
     //Adapters
     private CountrySpinnerAdapter mCountrySpinnerAdapter;
-    private PhoneNumberWatcher mPhoneNumberWatcher = new PhoneNumberWatcher(DEFAULT_COUNTRY);
+    private PhoneNumberWatcher mPhoneNumberWatcher = null;
 
     //Util
     private PhoneNumberUtil mPhoneUtil = PhoneNumberUtil.getInstance();
@@ -97,6 +98,14 @@ public class IntlPhoneInput extends LinearLayout {
          * Phone text field
          */
         mPhoneEdit = (TextInputEditText) findViewById(R.id.intl_phone_edit__phone);
+        if (DEFAULT_COUNTRY == null || DEFAULT_COUNTRY.isEmpty()) {
+            Locale locale = Resources.getSystem().getConfiguration().locale;
+            if (locale != null) {
+                DEFAULT_COUNTRY = locale.getCountry();
+            }
+        }
+        mPhoneNumberWatcher = new PhoneNumberWatcher(DEFAULT_COUNTRY);
+
         mPhoneEdit.addTextChangedListener(mPhoneNumberWatcher);
         mPhoneEdit.getBackground().mutate().setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_ATOP);
 
@@ -208,6 +217,13 @@ public class IntlPhoneInput extends LinearLayout {
     public void setEmptyDefault(String iso) {
         if (iso == null || iso.isEmpty()) {
             iso = DEFAULT_COUNTRY;
+            if (DEFAULT_COUNTRY == null || DEFAULT_COUNTRY.isEmpty()) {
+                Locale locale = Resources.getSystem().getConfiguration().locale;
+                if (locale != null) {
+                    iso = locale.getCountry();
+                    DEFAULT_COUNTRY = iso;
+                }
+            }
         }
         int defaultIdx = mCountries.indexOfIso(iso);
         if (defaultIdx < 0)

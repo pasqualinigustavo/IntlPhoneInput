@@ -18,6 +18,27 @@
     <!--android:layout_marginTop="36dp"-->
     <!--android:text="Custom" />-->
 
+    <android.support.design.widget.TextInputLayout
+        android:id="@+id/fragment_user_configurations__inputlayout_email"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:enabled="true"
+        android:focusable="false"
+        android:focusableInTouchMode="false">
+
+        <EditText
+            android:id="@+id/fragment_user_configurations__edittext_email"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:enabled="true"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
+            android:hint="@string/fragment_signup_step_two_lbl_email"
+            android:text="some Text"
+            android:textColor="#000000" />
+    </android.support.design.widget.TextInputLayout>
+
     <net.rimoto.intlphoneinput.IntlPhoneInput
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

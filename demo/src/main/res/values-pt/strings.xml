@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Demo</string>
+    <string name="fragment_signup_step_two_lbl_email">Português</string>
+</resources>

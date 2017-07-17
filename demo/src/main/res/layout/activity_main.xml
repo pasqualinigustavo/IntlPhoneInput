@@ -28,7 +28,7 @@
         android:focusableInTouchMode="false">
 
         <EditText
-            android:id="@+id/fragment_user_configurations__edittext_email"
+            android:id="@+id/some_field"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:enabled="true"
@@ -40,6 +40,7 @@
     </android.support.design.widget.TextInputLayout>
 
     <net.rimoto.intlphoneinput.IntlPhoneInput
+        android:id="@+id/phone"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:hint="@string/item_preview_hint"

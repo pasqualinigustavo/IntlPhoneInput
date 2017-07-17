@@ -398,6 +398,40 @@ public class IntlPhoneInput extends LinearLayout {
     }
 
     /**
+     * Get PhoneNumber object
+     *
+     * @return PhonenUmber | null on error
+     */
+    @SuppressWarnings("unused")
+    public Phonenumber.PhoneNumber getPhoneNumber(boolean replaceIso) {
+        try {
+            String iso = null;
+            String number = mPhoneEdit.getText().toString();
+            if (mSelectedCountry != null) {
+                iso = mSelectedCountry.getIso();
+                number = number.replace("+" + String.valueOf(mSelectedCountry.getDialCode()), "");
+            }
+            return mPhoneUtil.parse(number, iso);
+        } catch (NumberParseException ignored) {
+            return null;
+        }
+    }
+
+    public String getValidContent() {
+        try {
+            String iso = null;
+            String number = mPhoneEdit.getText().toString();
+            if (mSelectedCountry != null) {
+                iso = mSelectedCountry.getIso();
+                number = number.replace("+" + String.valueOf(mSelectedCountry.getDialCode()), "").trim();
+            }
+            return number;
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    /**
      * Get selected country
      *
      * @return Country
@@ -415,6 +449,17 @@ public class IntlPhoneInput extends LinearLayout {
     @SuppressWarnings("unused")
     public boolean isValid() {
         Phonenumber.PhoneNumber phoneNumber = getPhoneNumber();
+        return phoneNumber != null && mPhoneUtil.isValidNumber(phoneNumber);
+    }
+
+    /**
+     * Check if number is valid
+     *
+     * @return boolean
+     */
+    @SuppressWarnings("unused")
+    public boolean isValid(boolean replaceIso) {
+        Phonenumber.PhoneNumber phoneNumber = getPhoneNumber(replaceIso);
         return phoneNumber != null && mPhoneUtil.isValidNumber(phoneNumber);
     }
 

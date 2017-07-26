@@ -9,7 +9,8 @@ import android.graphics.PorterDuff;
 import android.os.Build;
 import android.support.design.widget.TextInputEditText;
 import android.telephony.PhoneNumberFormattingTextWatcher;
-import android.telephony.TelephonyManager;
+import android.text.Editable;
+import android.text.Selection;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.TypedValue;
@@ -192,21 +193,9 @@ public class IntlPhoneInput extends LinearLayout {
 
     /**
      * Set default value
-     * Will try to retrieve phone number from device
      */
     public void setDefault() {
-        try {
-            TelephonyManager telephonyManager = (TelephonyManager) getContext().getSystemService(Context.TELEPHONY_SERVICE);
-            String phone = telephonyManager.getLine1Number();
-            if (phone != null && !phone.isEmpty()) {
-                this.setNumber(phone);
-            } else {
-                String iso = telephonyManager.getNetworkCountryIso();
-                setEmptyDefault(iso);
-            }
-        } catch (SecurityException e) {
-            setEmptyDefault();
-        }
+        setEmptyDefault(null);
     }
 
     /**
@@ -281,10 +270,33 @@ public class IntlPhoneInput extends LinearLayout {
     private AdapterView.OnItemSelectedListener mCountrySpinnerListener = new AdapterView.OnItemSelectedListener() {
         @Override
         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-            mSelectedCountry = mCountrySpinnerAdapter.getItem(position);
-            mPhoneNumberWatcher = new PhoneNumberWatcher(mSelectedCountry.getIso());
+            if (isValid()) {
+                try {
+                    String iso = null;
+                    if (mSelectedCountry != null) {
+                        iso = mSelectedCountry.getIso();
+                    }
+                    Phonenumber.PhoneNumber phoneNumber = mPhoneUtil.parse(mPhoneEdit.getText().toString(), iso);
+                    long number = phoneNumber.getNationalNumber();
 
-            setHint();
+                    mSelectedCountry = mCountrySpinnerAdapter.getItem(position);
+                    mPhoneNumberWatcher = new PhoneNumberWatcher(mSelectedCountry.getIso());
+                    mPhoneEdit.setText("+" + mSelectedCountry.getDialCode() + String.valueOf(number));
+                    Selection.setSelection(mPhoneEdit.getText(), mPhoneEdit.getText().length());
+                } catch (NumberParseException ignored) {
+
+                }
+            } else {
+                //if has number change only the country dial code
+                String textTotal = mPhoneEdit.getText().toString();
+                String phone = textTotal.replace("+" + mSelectedCountry.getDialCode(), "");
+                //now changes
+                mSelectedCountry = mCountrySpinnerAdapter.getItem(position);
+                mPhoneNumberWatcher = new PhoneNumberWatcher(mSelectedCountry.getIso());
+                mPhoneEdit.setText("+" + mSelectedCountry.getDialCode() + phone);
+                Selection.setSelection(mPhoneEdit.getText(), mPhoneEdit.getText().length());
+            }
+            //setHint();
         }
 
         @Override
@@ -309,29 +321,45 @@ public class IntlPhoneInput extends LinearLayout {
             super(countryCode);
         }
 
-        @Override
-        public void onTextChanged(CharSequence s, int start, int before, int count) {
-            super.onTextChanged(s, start, before, count);
-            try {
-                String iso = null;
-                if (mSelectedCountry != null) {
-                    iso = mSelectedCountry.getIso();
-                }
-                Phonenumber.PhoneNumber phoneNumber = mPhoneUtil.parse(s.toString(), iso);
-                iso = mPhoneUtil.getRegionCodeForNumber(phoneNumber);
-                if (iso != null) {
-                    int countryIdx = mCountries.indexOfIso(iso);
-                    mCountrySpinner.setSelection(countryIdx);
-                }
-            } catch (NumberParseException ignored) {
-            }
+//        @Override
+//        public void onTextChanged(CharSequence s, int start, int before, int count) {
+//            super.onTextChanged(s, start, before, count);
+//            try {
+//                String iso = null;
+//                if (mSelectedCountry != null) {
+//                    iso = mSelectedCountry.getIso();
+//                }
+//                Phonenumber.PhoneNumber phoneNumber = mPhoneUtil.parse(s.toString(), iso);
+//                iso = mPhoneUtil.getRegionCodeForNumber(phoneNumber);
+//                if (iso != null) {
+//                    int countryIdx = mCountries.indexOfIso(iso);
+//                    mCountrySpinner.setSelection(countryIdx);
+//                }
+//            } catch (NumberParseException ignored) {
+//            }
+//
+//            if (mIntlPhoneInputListener != null) {
+//                boolean validity = isValid();
+//                if (validity != lastValidity) {
+//                    mIntlPhoneInputListener.done(IntlPhoneInput.this, validity);
+//                }
+//                lastValidity = validity;
+//            }
+//        }
 
-            if (mIntlPhoneInputListener != null) {
-                boolean validity = isValid();
-                if (validity != lastValidity) {
-                    mIntlPhoneInputListener.done(IntlPhoneInput.this, validity);
+        @Override
+        public synchronized void afterTextChanged(Editable s) {
+            super.afterTextChanged(s);
+            if (s != null && s.length() > 0) {
+                try {
+                    if (mSelectedCountry != null) {
+                        if (!s.toString().startsWith("+" + mSelectedCountry.getDialCode())) {
+                            mPhoneEdit.setText("+" + mSelectedCountry.getDialCode());
+                            Selection.setSelection(mPhoneEdit.getText(), mPhoneEdit.getText().length());
+                        }
+                    }
+                } catch (Exception ignored) {
                 }
-                lastValidity = validity;
             }
         }
     }
@@ -351,9 +379,7 @@ public class IntlPhoneInput extends LinearLayout {
 
             int countryIdx = mCountries.indexOfIso(mPhoneUtil.getRegionCodeForNumber(phoneNumber));
             mSelectedCountry = mCountries.get(countryIdx);
-            mCountrySpinner.setSelection(countryIdx);
-
-
+            //mCountrySpinner.setSelection(countryIdx);
             mPhoneEdit.setText(mPhoneUtil.format(phoneNumber, PhoneNumberUtil.PhoneNumberFormat.NATIONAL));
         } catch (NumberParseException ignored) {
         }
@@ -361,8 +387,6 @@ public class IntlPhoneInput extends LinearLayout {
 
     /**
      * Get number
-     *
-     * @return Phone number in E.164 format | null on error
      */
     @SuppressWarnings("unused")
     public String getNumber() {
@@ -372,7 +396,7 @@ public class IntlPhoneInput extends LinearLayout {
             return null;
         }
 
-        return mPhoneUtil.format(phoneNumber, PhoneNumberUtil.PhoneNumberFormat.E164);
+        return mPhoneUtil.format(phoneNumber, PhoneNumberUtil.PhoneNumberFormat.INTERNATIONAL);
     }
 
     public String getText() {

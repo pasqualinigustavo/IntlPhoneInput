@@ -235,7 +235,7 @@ public class IntlPhoneInput extends LinearLayout {
         if (phoneEditLayout != null && mSelectedCountry != null && mSelectedCountry.getIso() != null) {
             Phonenumber.PhoneNumber phoneNumber = mPhoneUtil.getExampleNumberForType(mSelectedCountry.getIso(), PhoneNumberUtil.PhoneNumberType.MOBILE);
             if (phoneNumber != null) {
-                mPhoneEdit.setHint(mPhoneUtil.format(phoneNumber, PhoneNumberUtil.PhoneNumberFormat.NATIONAL));
+                mPhoneEdit.setHint(mPhoneUtil.format(phoneNumber, PhoneNumberUtil.PhoneNumberFormat.INTERNATIONAL));
             }
         }
     }
@@ -280,7 +280,7 @@ public class IntlPhoneInput extends LinearLayout {
                     long number = phoneNumber.getNationalNumber();
 
                     mSelectedCountry = mCountrySpinnerAdapter.getItem(position);
-                    mPhoneNumberWatcher = new PhoneNumberWatcher(mSelectedCountry.getIso());
+                    //mPhoneNumberWatcher = new PhoneNumberWatcher(mSelectedCountry.getIso());
                     mPhoneEdit.setText("+" + mSelectedCountry.getDialCode() + String.valueOf(number));
                     Selection.setSelection(mPhoneEdit.getText(), mPhoneEdit.getText().length());
                 } catch (NumberParseException ignored) {
@@ -292,11 +292,11 @@ public class IntlPhoneInput extends LinearLayout {
                 String phone = textTotal.replace("+" + mSelectedCountry.getDialCode(), "");
                 //now changes
                 mSelectedCountry = mCountrySpinnerAdapter.getItem(position);
-                mPhoneNumberWatcher = new PhoneNumberWatcher(mSelectedCountry.getIso());
+                //mPhoneNumberWatcher = new PhoneNumberWatcher(mSelectedCountry.getIso());
                 mPhoneEdit.setText("+" + mSelectedCountry.getDialCode() + phone);
                 Selection.setSelection(mPhoneEdit.getText(), mPhoneEdit.getText().length());
             }
-            //setHint();
+            setHint();
         }
 
         @Override
@@ -379,8 +379,8 @@ public class IntlPhoneInput extends LinearLayout {
 
             int countryIdx = mCountries.indexOfIso(mPhoneUtil.getRegionCodeForNumber(phoneNumber));
             mSelectedCountry = mCountries.get(countryIdx);
-            //mCountrySpinner.setSelection(countryIdx);
-            mPhoneEdit.setText(mPhoneUtil.format(phoneNumber, PhoneNumberUtil.PhoneNumberFormat.NATIONAL));
+            mPhoneEdit.setText(mPhoneUtil.format(phoneNumber, PhoneNumberUtil.PhoneNumberFormat.INTERNATIONAL));
+            mCountrySpinner.setSelection(countryIdx);
         } catch (NumberParseException ignored) {
         }
     }
